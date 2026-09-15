@@ -1,5 +1,6 @@
 import Link from "next/link";
 import "@/styling/layout/Sidebar.css";
+import ThemeToggle from "@/components/toggles/ThemeToggle";
 
 export default function Sidebar() {
     return (
@@ -22,6 +23,10 @@ export default function Sidebar() {
                     Dokumente
                 </Link>
             </nav>
+
+            <div className="sidebar__toggle">
+                <ThemeToggle></ThemeToggle>
+            </div>
         </aside>
     );
 }

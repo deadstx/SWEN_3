@@ -38,3 +38,9 @@
     background-color: var(--background);
     color: var(--text-primary);
 }
+
+.sidebar__toggle {
+
+    margin-top: 2rem;
+    padding: 0 0.5rem;
+}
