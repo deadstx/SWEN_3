@@ -1,5 +1,5 @@
 
-
+import "@/styling/dashboard/DashboardStatCards.css";
 
 
 export default function DashboardStatCards() {

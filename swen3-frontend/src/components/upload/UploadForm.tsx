@@ -1,4 +1,5 @@
 
+import "@/styling/upload/UploadForm.css"
 
 export default function UploadForm() {
     return (

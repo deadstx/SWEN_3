@@ -5,8 +5,8 @@
     top: 0;
     display: flex;
     flex-direction: column;
-    background-color: #111827;
-    color: #f9fafb;
+    background-color: var(--background);
+    color: var(--text-primary);
     padding: 1.5rem 1rem;
     box-sizing: border-box;
 }

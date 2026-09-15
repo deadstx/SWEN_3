@@ -1,5 +1,5 @@
 import Link from "next/link";
-import "../../styling/layout/Sidebar.css";
+import "@/styling/layout/Sidebar.css";
 
 export default function Sidebar() {
     return (

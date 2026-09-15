@@ -1,5 +1,7 @@
 import Sidebar from "@/components/layout/Sidebar";
-import "@/styling/layout/Sidebar.css";
+import "@/styling/layout/MainLayout.css";
+
+
 
 type MainLayoutProps = {
     children: React.ReactNode;
