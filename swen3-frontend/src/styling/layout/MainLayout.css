@@ -1,6 +1,8 @@
 .main-layout {
     display: flex;
     min-height: 100vh;
+    background-color: var(--background);
+    color: var(--text-primary);
 }
 
 .main-layout__content {
@@ -9,4 +11,6 @@
     box-sizing: border-box;
     max-width: 100%;
     overflow-x: auto;
+    background-color: var(--background);
+    color: var(--text-primary);
 }

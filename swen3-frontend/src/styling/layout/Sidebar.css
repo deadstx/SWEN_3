@@ -5,7 +5,7 @@
     top: 0;
     display: flex;
     flex-direction: column;
-    background-color: var(--background);
+    background-color: var(--sidebar-background);
     color: var(--text-primary);
     padding: 1.5rem 1rem;
     box-sizing: border-box;
@@ -16,6 +16,7 @@
     font-weight: 600;
     margin-bottom: 2rem;
     padding: 0 0.5rem;
+    color: var(--text-primary);
 }
 
 .sidebar__nav {
@@ -25,7 +26,7 @@
 }
 
 .sidebar__link {
-    color: #d1d5db;
+    color: var(--text-primary);
     text-decoration: none;
     padding: 0.6rem 0.75rem;
     border-radius: 6px;
@@ -34,6 +35,6 @@
 }
 
 .sidebar__link:hover {
-    background-color: #1f2937;
-    color: #ffffff;
+    background-color: var(--background);
+    color: var(--text-primary);
 }
