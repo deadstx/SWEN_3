@@ -6,14 +6,15 @@ type MainLayoutProps = {
     children: React.ReactNode;
     title: string;
     subtitle?: string;
+    button?: boolean;
 };
 
-export default function MainLayout({ children, title, subtitle }: MainLayoutProps) {
+export default function MainLayout({ children, title, button }: MainLayoutProps) {
     return (
         <div className="main-layout">
             <Sidebar />
             <div className="main-layout__body">
-                <PageHeader title={title} subtitle={subtitle} />
+                <PageHeader title={title} button={button} />
                 <main className="main-layout__content">{children}</main>
             </div>
         </div>

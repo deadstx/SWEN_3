@@ -1,15 +1,18 @@
 import "@/styling/layout/PageHeader.css";
+import {PlusIcon} from "lucide-react";
 
 interface PageHeaderProps {
     title: string;
     subtitle?: string;
+    button?: boolean;
 }
 
-export default function PageHeader({ title, subtitle }: PageHeaderProps) {
+export default function PageHeader({ title, button }: PageHeaderProps) {
     return (
         <header className="page-header">
             <h1 className="page-header__title">{title}</h1>
-            {subtitle && <p className="page-header__subtitle">{subtitle}</p>}
+
+            {button && <a><PlusIcon></PlusIcon></a>}
         </header>
     );
 }
