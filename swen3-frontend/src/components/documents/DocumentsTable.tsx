@@ -4,49 +4,48 @@ import BasicTable, { type Column } from "@/components/common/BasicTable";
 import BasicModal from "@/components/common/BasicModal";
 import { useState } from "react";
 
-interface User {
+interface Document {
     id: number;
     name: string;
-    email: string;
-    active: boolean;
+    fileSize: number;
+    uploadedAt: string;
 }
 
-const columns: Column<User>[] = [
-    { key: "id", label: "ID", align: "right" },
+const columns: Column<Document>[] = [
+    { key: "id", label: "ID", align: "left" },
     { key: "name", label: "Name" },
-    { key: "email", label: "E-Mail" },
+    { key: "fileSize", label: "Dateigröße" },
     {
-        key: "active",
-        label: "Status",
-        align: "center",
-        render: (user) => (user.active ? "Aktiv" : "Inaktiv"),
+        key: "uploadedAt",
+        label: "Erstellt am",
+        align: "right",
     },
 ];
 
-const users: User[] = [
-    { id: 1, name: "Anna Muster", email: "anna@example.com", active: true },
-    { id: 2, name: "Ben Beispiel", email: "ben@example.com", active: false },
-    { id: 3, name: "Clara Test", email: "clara@example.com", active: true },
+const docs: Document[] = [
+    { id: 1, name: "TestPDF1", fileSize: 2, uploadedAt: "09.09.2026" },
+    { id: 2, name: "TestPDF2", fileSize: 12, uploadedAt: "09.09.2026" },
+    { id: 3, name: "TestPDF3", fileSize: 30, uploadedAt: "09.09.2026" },
 ];
 
 export default function DocumentsTable() {
     // null = Modal geschlossen, sonst der angeklickte User
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
 
-    const closeModal = () => setSelectedUser(null);
+    const closeModal = () => setSelectedDocument(null);
 
     return (
         <>
-            <BasicTable<User>
+            <BasicTable<Document>
                 caption="Alle Dokumente"
                 columns={columns}
-                data={users}
+                data={docs}
                 getRowKey={(user) => user.id}
-                onRowClick={(user) => setSelectedUser(user)}
+                onRowClick={(docs) => setSelectedDocument(docs)}
             />
 
             <BasicModal
-                isOpen={selectedUser !== null}
+                isOpen={selectedDocument !== null}
                 onClose={closeModal}
                 title={"Detailansicht"}
             >
