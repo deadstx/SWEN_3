@@ -1,0 +1,84 @@
+
+.basic-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.basic-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.925rem;
+    color: var(--foreground);
+}
+
+.basic-table__caption {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border);
+}
+
+.basic-table th,
+.basic-table td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.basic-table thead th {
+    background: var(--muted);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.basic-table tbody td {
+    color: var(--text-primary);
+}
+
+.basic-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.basic-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.basic-table tbody tr:hover {
+    background: var(--sidebar-hover);
+}
+
+/* Ausrichtung */
+.basic-table__cell--left {
+    text-align: left;
+}
+
+.basic-table__cell--center {
+    text-align: center;
+}
+
+.basic-table__cell--right {
+    text-align: right;
+}
+
+/* Klickbare Zeilen */
+.basic-table__row--clickable {
+    cursor: pointer;
+}
+
+.basic-table__row--clickable:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+/* Leerer Zustand */
+.basic-table__empty {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    color: var(--text-secondary) !important;
+}

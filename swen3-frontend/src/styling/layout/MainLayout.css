@@ -1,0 +1,23 @@
+.main-layout {
+    display: flex;
+    height: 100vh;
+}
+
+.main-layout__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0; /* verhindert Überlaufen bei breitem Inhalt */
+}
+
+.main-layout__content {
+    flex: 1;
+    overflow-y: auto; /* nur der Content scrollt, der Header bleibt oben */
+    padding: 2rem 2.5rem;
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow-x: auto;
+    background-color: var(--background);
+    color: var(--text-primary);
+}
+
