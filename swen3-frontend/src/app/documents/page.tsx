@@ -3,7 +3,7 @@ import DocumentsTable from "@/components/documents/DocumentsTable";
 
 export default function DocumentsPage() {
     return (
-        <MainLayout title="Documents Page">
+        <MainLayout title="Dokumente">
             <DocumentsTable />
         </MainLayout>
     );
