@@ -13,11 +13,11 @@ export default function Sidebar() {
                 <Link href="/" className="sidebar__link">
                     Dashboard
                 </Link>
-                <Link href="/upload" className="sidebar__link">
-                    Upload
-                </Link>
                 <Link href="/documents" className="sidebar__link">
                     Dokumente
+                </Link>
+                <Link href="/upload" className="sidebar__link">
+                    Upload
                 </Link>
             </nav>
 
