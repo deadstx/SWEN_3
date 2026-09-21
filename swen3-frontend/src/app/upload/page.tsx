@@ -4,7 +4,7 @@ import UploadForm from "@/components/upload/UploadForm";
 
 export default function UploadPage() {
     return (
-        <MainLayout>
+        <MainLayout title={"Upload"}>
             <UploadForm />
         </MainLayout>
     );

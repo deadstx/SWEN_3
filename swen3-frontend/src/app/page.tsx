@@ -4,7 +4,7 @@ import DashboardStatCards from "@/components/dashboard/DashboardStatCards";
 
 export default function DashboardPage() {
   return (
-      <MainLayout>
+      <MainLayout title={"Dashboard"}>
         <DashboardStatCards/>
       </MainLayout>
   );
