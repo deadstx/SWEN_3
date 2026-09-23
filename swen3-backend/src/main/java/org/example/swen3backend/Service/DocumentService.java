@@ -6,6 +6,8 @@ import org.example.swen3backend.dto.UpdateDocumentRequest;
 import org.example.swen3backend.entity.DocumentEntity;
 import org.example.swen3backend.mapper.DocumentMapper;
 import org.example.swen3backend.repository.DocumentRepository;
+import org.example.swen3backend.repository.DocumentCollectionRepository;
+import org.example.swen3backend.validation.FieldValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,8 @@ public class DocumentService {
 
     private final DocumentRepository documentRepository;
     private final DocumentMapper documentMapper;
+    private final DocumentCollectionRepository collectionRepository;
+    private final FieldValidator fieldValidator;
 
     public DocumentResponse upload(String originalFilename, byte[] content) {
         String name = normalizeFilename(originalFilename);
@@ -48,12 +52,12 @@ public class DocumentService {
         }
 
         String name = request.name() != null
-                ? validateAndStrip(request.name(), "Der Name")
+                ? fieldValidator.validateAndStrip(request.name(), "Der Name")
                 : null;
 
         List<String> tags = request.tags() != null
                 ? request.tags().stream()
-                .map(tag -> validateAndStrip(tag, "Jeder Tag"))
+                .map(tag -> fieldValidator.validateAndStrip(tag, "Jeder Tag"))
                 .toList()
                 : null;
 
@@ -68,7 +72,9 @@ public class DocumentService {
     }
 
     public void delete(long id) {
-        documentRepository.delete(findDocument(id));
+        DocumentEntity document = findDocument(id);
+        collectionRepository.removeDocumentReferences(id);
+        documentRepository.delete(document);
     }
 
     private DocumentEntity findDocument(long id) {
@@ -79,19 +85,6 @@ public class DocumentService {
                 .orElseThrow(() -> new DocumentNotFoundException(id));
     }
 
-    private String validateAndStrip(String value, String fieldLabel) {
-        if (value == null) {
-            throw new InvalidDocumentException(fieldLabel + " darf nicht null sein.");
-        }
-        String stripped = value.strip();
-        if (stripped.isBlank() || stripped.length() > 255) {
-            throw new InvalidDocumentException(
-                    fieldLabel + " muss zwischen 1 und 255 Zeichen enthalten."
-            );
-        }
-        return stripped;
-    }
-
     private String normalizeFilename(String originalFilename) {
         if (originalFilename == null) {
             throw new InvalidDocumentException("Ein Dateiname ist erforderlich.");
@@ -100,7 +93,7 @@ public class DocumentService {
         String normalized = originalFilename.replace('\\', '/');
         String name = normalized.substring(normalized.lastIndexOf('/') + 1);
 
-        return validateAndStrip(name, "Der Dateiname");
+        return fieldValidator.validateAndStrip(name, "Der Dateiname");
     }
 
     private void validateContent(byte[] content) {

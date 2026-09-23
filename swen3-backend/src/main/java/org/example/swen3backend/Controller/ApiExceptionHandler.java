@@ -1,6 +1,7 @@
 package org.example.swen3backend.controller;
 
 import org.example.swen3backend.service.DocumentNotFoundException;
+import org.example.swen3backend.service.CollectionNotFoundException;
 import org.example.swen3backend.service.InvalidDocumentException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -10,10 +11,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 //macht die Klasse global für alle Controller wirksam.
-public class DocumentExceptionHandler extends ResponseEntityExceptionHandler {
+public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(DocumentNotFoundException.class)
-    public ProblemDetail handleDocumentNotFound(DocumentNotFoundException exception) {
+    @ExceptionHandler({DocumentNotFoundException.class, CollectionNotFoundException.class})
+    public ProblemDetail handleNotFound(RuntimeException exception) {
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.NOT_FOUND,
                 exception.getMessage()

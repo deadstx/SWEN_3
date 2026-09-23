@@ -5,9 +5,11 @@ import org.example.swen3backend.dto.UpdateDocumentRequest;
 import org.example.swen3backend.entity.DocumentEntity;
 import org.example.swen3backend.mapper.DocumentMapper;
 import org.example.swen3backend.repository.DocumentRepository;
+import org.example.swen3backend.repository.DocumentCollectionRepository;
 import org.example.swen3backend.service.DocumentNotFoundException;
 import org.example.swen3backend.service.DocumentService;
 import org.example.swen3backend.service.InvalidDocumentException;
+import org.example.swen3backend.validation.FieldValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,13 +30,15 @@ class DocumentServiceTests {
     private static final Instant UPLOADED_AT = Instant.parse("2026-09-23T08:00:00Z");
 
     private DocumentRepository repository;
+    private DocumentCollectionRepository collectionRepository;
     private DocumentService service;
     private DocumentEntity document;
 
     @BeforeEach
     void setUp() {
         repository = mock(DocumentRepository.class);
-        service = new DocumentService(repository, new DocumentMapper());
+        collectionRepository = mock(DocumentCollectionRepository.class);
+        service = new DocumentService(repository, new DocumentMapper(), collectionRepository, new FieldValidator() );
         document = new DocumentEntity("test.pdf", PDF, PDF.length, UPLOADED_AT);
         document.getTags().add("existing");
 
@@ -184,10 +188,12 @@ class DocumentServiceTests {
     }
 
     @Test
-    void deleteRemovesDocument() {
+    void deleteRemovesCollectionMembershipsBeforeDeletingDocument() {
         service.delete(1L);
 
-        verify(repository).delete(document);
+        var deletionOrder = inOrder(collectionRepository, repository);
+        deletionOrder.verify(collectionRepository).removeDocumentReferences(1L);
+        deletionOrder.verify(repository).delete(document);
     }
 }
 
