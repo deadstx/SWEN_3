@@ -7,23 +7,23 @@ import "@/styling/documents/DocumentDetailModal.css";
 type DocumentDetailModalProps = {
     document: DocumentResponse | null;
     deleting: boolean;
-    onCloseAction: () => void;
-    onDeleteAction: () => void;
+    onClose: () => void;
+    onDelete: () => void;
 };
 
 export const formatFileSize = (bytes: number) => `${(bytes / 1024).toFixed(1)} KB`;
 
-export default function DocumentDetailModal({ document, deleting, onCloseAction, onDeleteAction }: DocumentDetailModalProps) {
+export default function DocumentDetailModal({ document, deleting, onClose, onDelete }: DocumentDetailModalProps) {
     return (
         <BasicModal
             isOpen={document !== null}
-            onClose={onCloseAction}
+            onClose={onClose}
             title="Dokumentdetails"
             footer={
                 <div className="document-detail__footer">
                     <button
                         type="button"
-                        onClick={onCloseAction}
+                        onClick={onClose}
                         disabled={deleting}
                         className="document-detail__button"
                     >
@@ -31,7 +31,7 @@ export default function DocumentDetailModal({ document, deleting, onCloseAction,
                     </button>
                     <button
                         type="button"
-                        onClick={onDeleteAction}
+                        onClick={onDelete}
                         disabled={deleting}
                         className="document-detail__button document-detail__button--danger"
                     >

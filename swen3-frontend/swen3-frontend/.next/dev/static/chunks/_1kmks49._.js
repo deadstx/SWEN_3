@@ -1745,19 +1745,19 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$common$
 const formatFileSize = (bytes)=>`${(bytes / 1024).toFixed(1)} KB`;
 function DocumentDetailModal(t0) {
     const $ = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$compiler$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["c"])(18);
-    if ($[0] !== "71975fc60f665cad80c8aad4ff6ff43fc58dc1142697429a9987be9b7a4f90f3") {
+    if ($[0] !== "a58561719ab10e47a8d48b16f9b9159becc58587c865d2b1d80b28f46ab4d414") {
         for(let $i = 0; $i < 18; $i += 1){
             $[$i] = Symbol.for("react.memo_cache_sentinel");
         }
-        $[0] = "71975fc60f665cad80c8aad4ff6ff43fc58dc1142697429a9987be9b7a4f90f3";
+        $[0] = "a58561719ab10e47a8d48b16f9b9159becc58587c865d2b1d80b28f46ab4d414";
     }
-    const { document, deleting, onCloseAction, onDeleteAction } = t0;
+    const { document, deleting, onClose, onDelete } = t0;
     const t1 = document !== null;
     let t2;
-    if ($[1] !== deleting || $[2] !== onCloseAction) {
+    if ($[1] !== deleting || $[2] !== onClose) {
         t2 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
             type: "button",
-            onClick: onCloseAction,
+            onClick: onClose,
             disabled: deleting,
             className: "document-detail__button",
             children: "Abbrechen"
@@ -1767,17 +1767,17 @@ function DocumentDetailModal(t0) {
             columnNumber: 10
         }, this);
         $[1] = deleting;
-        $[2] = onCloseAction;
+        $[2] = onClose;
         $[3] = t2;
     } else {
         t2 = $[3];
     }
     const t3 = deleting ? "Wird gel\xF6scht..." : "Dokument l\xF6schen";
     let t4;
-    if ($[4] !== deleting || $[5] !== onDeleteAction || $[6] !== t3) {
+    if ($[4] !== deleting || $[5] !== onDelete || $[6] !== t3) {
         t4 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
             type: "button",
-            onClick: onDeleteAction,
+            onClick: onDelete,
             disabled: deleting,
             className: "document-detail__button document-detail__button--danger",
             children: t3
@@ -1787,7 +1787,7 @@ function DocumentDetailModal(t0) {
             columnNumber: 10
         }, this);
         $[4] = deleting;
-        $[5] = onDeleteAction;
+        $[5] = onDelete;
         $[6] = t3;
         $[7] = t4;
     } else {
@@ -1907,10 +1907,10 @@ function DocumentDetailModal(t0) {
         t6 = $[12];
     }
     let t7;
-    if ($[13] !== onCloseAction || $[14] !== t1 || $[15] !== t5 || $[16] !== t6) {
+    if ($[13] !== onClose || $[14] !== t1 || $[15] !== t5 || $[16] !== t6) {
         t7 = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$common$2f$BasicModal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
             isOpen: t1,
-            onClose: onCloseAction,
+            onClose: onClose,
             title: "Dokumentdetails",
             footer: t5,
             children: t6
@@ -1919,7 +1919,7 @@ function DocumentDetailModal(t0) {
             lineNumber: 68,
             columnNumber: 10
         }, this);
-        $[13] = onCloseAction;
+        $[13] = onClose;
         $[14] = t1;
         $[15] = t5;
         $[16] = t6;
