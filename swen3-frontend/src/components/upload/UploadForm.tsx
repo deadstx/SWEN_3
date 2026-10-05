@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 
+import { uploadDocument } from "@/data/repository/DocumentRepository";
 import "@/styling/upload/UploadForm.css";
 
 type UploadStatus = "idle" | "uploading" | "success" | "error";
@@ -10,6 +11,7 @@ interface UploadFile {
     file: File;
     progress: number;
     status: UploadStatus;
+    error?: string;
 }
 
 export default function UploadForm() {
@@ -17,57 +19,42 @@ export default function UploadForm() {
     const [uploads, setUploads] = useState<UploadFile[]>([]);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    const uploadFile = useCallback(async (file: File) => {
+        try {
+            await uploadDocument(file);
+            setUploads((previous) => previous.map((upload) =>
+                upload.file === file
+                    ? { ...upload, progress: 100, status: "success" }
+                    : upload
+            ));
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Upload fehlgeschlagen.";
+            setUploads((previous) => previous.map((upload) =>
+                upload.file === file
+                    ? { ...upload, progress: 0, status: "error", error: message }
+                    : upload
+            ));
+        }
+    }, []);
+
     const handleFiles = useCallback((fileList: FileList | null) => {
         if (!fileList) return;
 
         const pdfFiles = Array.from(fileList).filter(
-            (file) => file.type === "application/pdf"
+            (file) => file.type === "application/pdf" && file.size <= 10 * 1024 * 1024
         );
 
         if (pdfFiles.length === 0) return;
 
         const newUploads: UploadFile[] = pdfFiles.map((file) => ({
             file,
-            progress: 0,
+            progress: 20,
             status: "uploading",
         }));
 
         setUploads((prev) => [...prev, ...newUploads]);
-
-        // Mock-Upload mit Fortschritts-Animation.
-        // TODO: durch echten API-Call ersetzen (z.B. fetch mit FormData + Progress via XHR).
-        newUploads.forEach((upload) => {
-            simulateUpload(upload.file);
-        });
-    }, []);
-
-    const simulateUpload = (targetFile: File) => {
-        let progress = 0;
-
-        const interval = setInterval(() => {
-            progress += Math.random() * 20 + 10;
-
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
-
-                setUploads((prev) =>
-                    prev.map((u) =>
-                        u.file === targetFile
-                            ? { ...u, progress: 100, status: "success" }
-                            : u
-                    )
-                );
-                return;
-            }
-
-            setUploads((prev) =>
-                prev.map((u) =>
-                    u.file === targetFile ? { ...u, progress } : u
-                )
-            );
-        }, 250);
-    };
+        newUploads.forEach(({ file }) => void uploadFile(file));
+    }, [uploadFile]);
 
     const removeUpload = (targetFile: File) => {
         setUploads((prev) => prev.filter((u) => u.file !== targetFile));
@@ -138,6 +125,10 @@ export default function UploadForm() {
                                         {upload.file.name}
                                     </span>
 
+                                    {upload.error && (
+                                        <span className="upload-item__error">{upload.error}</span>
+                                    )}
+
                                     <div className="upload-item__bar-track">
                                         <div
                                             className="upload-item__bar-fill"
@@ -151,10 +142,10 @@ export default function UploadForm() {
                                         <span className="upload-item__check">
                                             <CheckIcon />
                                         </span>
+                                    ) : upload.status === "error" ? (
+                                        <span className="upload-item__failed" aria-label="Upload fehlgeschlagen">!</span>
                                     ) : (
-                                        <span className="upload-item__percent">
-                                            {Math.round(upload.progress)}%
-                                        </span>
+                                        <span className="upload-item__percent">...</span>
                                     )}
                                 </div>
 

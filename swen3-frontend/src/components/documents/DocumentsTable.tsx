@@ -2,54 +2,107 @@
 
 import BasicTable, { type Column } from "@/components/common/BasicTable";
 import BasicModal from "@/components/common/BasicModal";
-import { useState } from "react";
+import type { DocumentResponse } from "@/data/model/Document";
+import { deleteDocumentById, fetchAllDocuments } from "@/data/repository/DocumentRepository";
+import { useEffect, useState } from "react";
 
-interface Document {
-    id: number;
-    name: string;
-    fileSize: number;
-    uploadedAt: string;
-}
-
-const columns: Column<Document>[] = [
+const columns: Column<DocumentResponse>[] = [
     { key: "id", label: "ID", align: "left" },
     { key: "name", label: "Name" },
-    { key: "fileSize", label: "Dateigröße" },
+    {
+        key: "fileSize",
+        label: "Dateigröße",
+        render: (document) => `${(document.fileSize / 1024).toFixed(1)} KB`,
+    },
     {
         key: "uploadedAt",
         label: "Erstellt am",
         align: "right",
+        render: (document) => new Date(document.uploadedAt).toLocaleString("de-AT"),
     },
 ];
 
-const docs: Document[] = [
-    { id: 1, name: "TestPDF1", fileSize: 2, uploadedAt: "09.09.2026" },
-    { id: 2, name: "TestPDF2", fileSize: 12, uploadedAt: "09.09.2026" },
-    { id: 3, name: "TestPDF3", fileSize: 30, uploadedAt: "09.09.2026" },
-];
-
 export default function DocumentsTable() {
-    // null = Modal geschlossen, sonst der angeklickte User
-    const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+    const [documents, setDocuments] = useState<DocumentResponse[]>([]);
+    const [selectedDocument, setSelectedDocument] = useState<DocumentResponse | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [deleting, setDeleting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        let active = true;
+
+        fetchAllDocuments()
+            .then((result) => {
+                if (active) setDocuments(result);
+            })
+            .catch((loadError: unknown) => {
+                if (active) {
+                    setError(loadError instanceof Error ? loadError.message : "Dokumente konnten nicht geladen werden.");
+                }
+            })
+            .finally(() => {
+                if (active) setLoading(false);
+            });
+
+        return () => {
+            active = false;
+        };
+    }, []);
 
     const closeModal = () => setSelectedDocument(null);
 
+    const deleteSelectedDocument = async () => {
+        if (!selectedDocument) return;
+
+        setDeleting(true);
+        setError(null);
+
+        try {
+            await deleteDocumentById(selectedDocument.id);
+            setDocuments((previous) => previous.filter((document) => document.id !== selectedDocument.id));
+            closeModal();
+        } catch (deleteError) {
+            setError(deleteError instanceof Error ? deleteError.message : "Dokument konnte nicht gelöscht werden.");
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    if (loading) return <p>Dokumente werden geladen...</p>;
+
     return (
         <>
-            <BasicTable<Document>
+            {error && <p role="alert">{error}</p>}
+
+            <BasicTable<DocumentResponse>
                 caption="Alle Dokumente"
                 columns={columns}
-                data={docs}
-                getRowKey={(user) => user.id}
-                onRowClick={(docs) => setSelectedDocument(docs)}
+                data={documents}
+                getRowKey={(document) => document.id}
+                onRowClick={setSelectedDocument}
             />
 
             <BasicModal
                 isOpen={selectedDocument !== null}
                 onClose={closeModal}
-                title={"Detailansicht"}
+                title="Dokumentdetails"
+                footer={
+                    <button type="button" onClick={deleteSelectedDocument} disabled={deleting}>
+                        {deleting ? "Wird gelöscht..." : "Dokument löschen"}
+                    </button>
+                }
             >
-                <div>TEST</div>
+                {selectedDocument && (
+                    <dl>
+                        <dt>Name</dt>
+                        <dd>{selectedDocument.name}</dd>
+                        <dt>Dateigröße</dt>
+                        <dd>{(selectedDocument.fileSize / 1024).toFixed(1)} KB</dd>
+                        <dt>Tags</dt>
+                        <dd>{selectedDocument.tags.length > 0 ? selectedDocument.tags.join(", ") : "Keine"}</dd>
+                    </dl>
+                )}
             </BasicModal>
         </>
     );

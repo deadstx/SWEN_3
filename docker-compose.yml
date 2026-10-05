@@ -22,9 +22,12 @@ services:
       - postgres
 
   frontend:
-    build: ./swen3-frontend
+    build:
+      context: ./swen3-frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8081
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_API_URL: http://localhost:8081
     ports:
       - "3000:3000"
     depends_on:
