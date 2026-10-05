@@ -1,3 +1,15 @@
+
+Project Startup 
+
+Frist Start
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+Afterwards 
+
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up 
+
+
+
 # Document Management System
 
 A document management system for **archiving, processing, searching, and managing digital documents**.

@@ -1,0 +1,55 @@
+/* [project]/src/styling/dashboard/DashboardStatCards.css [app-client] (css) */
+.stat-cards {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  display: grid;
+}
+
+.stat-card {
+  background-color: var(--background);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  flex-direction: column;
+  gap: .5rem;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+}
+
+.stat-card__label {
+  color: var(--text-secondary);
+  font-size: .85rem;
+}
+
+.stat-card__value {
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.stat-card__change {
+  border-radius: 999px;
+  width: fit-content;
+  padding: .15rem .5rem;
+  font-size: .85rem;
+  font-weight: 500;
+}
+
+.stat-card__change--up {
+  color: #15803d;
+  background-color: #15803d1f;
+}
+
+.stat-card__change--down {
+  color: #b91c1c;
+  background-color: #b91c1c1f;
+}
+
+@media (max-width: 768px) {
+  .stat-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/*# sourceMappingURL=src_styling_dashboard_DashboardStatCards_css_1igg3k2._.single.css.map*/

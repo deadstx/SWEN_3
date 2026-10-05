@@ -1,0 +1,25 @@
+/* [project]/src/styling/layout/PageHeader.css [app-client] (css) */
+.page-header {
+  box-sizing: border-box;
+  background-color: var(--sidebar-background);
+  flex-shrink: 0;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 80px;
+  padding: 0 24px;
+  display: flex;
+}
+
+.page-header__title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.page-header__subtitle {
+  opacity: .7;
+  margin: 0;
+  font-size: .875rem;
+}
+
+/*# sourceMappingURL=src_styling_layout_PageHeader_css_1igg3k2._.single.css.map*/

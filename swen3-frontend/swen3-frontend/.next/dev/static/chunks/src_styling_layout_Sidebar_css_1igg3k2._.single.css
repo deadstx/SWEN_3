@@ -1,0 +1,48 @@
+/* [project]/src/styling/layout/Sidebar.css [app-client] (css) */
+.sidebar {
+  background-color: var(--sidebar-background);
+  width: 240px;
+  height: 100vh;
+  color: var(--text-primary);
+  box-sizing: border-box;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  display: flex;
+  position: sticky;
+  top: 0;
+}
+
+.sidebar__logo {
+  color: var(--text-primary);
+  margin-bottom: 2rem;
+  padding: 0 .5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.sidebar__nav {
+  flex-direction: column;
+  gap: .25rem;
+  display: flex;
+}
+
+.sidebar__link {
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: .6rem .75rem;
+  font-size: .95rem;
+  text-decoration: none;
+  transition: background-color .15s, color .15s;
+}
+
+.sidebar__link:hover {
+  background-color: var(--background);
+  color: var(--text-primary);
+}
+
+.sidebar__toggle {
+  margin-top: 2rem;
+  padding: 0 .5rem;
+}
+
+/*# sourceMappingURL=src_styling_layout_Sidebar_css_1igg3k2._.single.css.map*/

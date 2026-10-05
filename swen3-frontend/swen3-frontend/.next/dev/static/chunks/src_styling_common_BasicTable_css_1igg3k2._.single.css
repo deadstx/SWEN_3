@@ -1,0 +1,82 @@
+/* [project]/src/styling/common/BasicTable.css [app-client] (css) */
+.basic-table-wrapper {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+.basic-table {
+  border-collapse: collapse;
+  width: 100%;
+  color: var(--foreground);
+  font-size: .925rem;
+}
+
+.basic-table__caption {
+  text-align: left;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  padding: .85rem 1rem;
+  font-weight: 600;
+}
+
+.basic-table th, .basic-table td {
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  padding: .7rem 1rem;
+}
+
+.basic-table thead th {
+  background: var(--muted);
+  color: var(--text-secondary);
+  font-size: .85rem;
+  font-weight: 600;
+}
+
+.basic-table tbody td {
+  color: var(--text-primary);
+}
+
+.basic-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.basic-table tbody tr {
+  transition: background-color .15s;
+}
+
+.basic-table tbody tr:hover {
+  background: var(--sidebar-hover);
+}
+
+.basic-table__cell--left {
+  text-align: left;
+}
+
+.basic-table__cell--center {
+  text-align: center;
+}
+
+.basic-table__cell--right {
+  text-align: right;
+}
+
+.basic-table__row--clickable {
+  cursor: pointer;
+}
+
+.basic-table__row--clickable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.basic-table__empty {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  color: var(--text-secondary) !important;
+}
+
+/*# sourceMappingURL=src_styling_common_BasicTable_css_1igg3k2._.single.css.map*/

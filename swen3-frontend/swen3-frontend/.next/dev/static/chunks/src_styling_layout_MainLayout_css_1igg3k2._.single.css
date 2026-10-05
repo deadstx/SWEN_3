@@ -1,0 +1,24 @@
+/* [project]/src/styling/layout/MainLayout.css [app-client] (css) */
+.main-layout {
+  height: 100vh;
+  display: flex;
+}
+
+.main-layout__body {
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.main-layout__content {
+  box-sizing: border-box;
+  background-color: var(--background);
+  max-width: 100%;
+  color: var(--text-primary);
+  flex: 1;
+  padding: 2rem 2.5rem;
+  overflow: auto;
+}
+
+/*# sourceMappingURL=src_styling_layout_MainLayout_css_1igg3k2._.single.css.map*/

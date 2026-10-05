@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/src/styling/layout/PageHeader.css"],"sourcesContent":[".page-header {\n    width: 100%;\n    height: 80px;\n    flex-shrink: 0;\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    padding: 0 24px;\n    box-sizing: border-box;\n    background-color: var(--sidebar-background);\n}\n\n.page-header__title {\n    margin: 0;\n    font-size: 1.5rem;\n}\n\n.page-header__subtitle {\n    margin: 0;\n    font-size: 0.875rem;\n    opacity: 0.7;\n}"],"names":[],"mappings":"AAAA;;;;;;;;;;;;AAYA;;;;;AAKA"}}]
+}

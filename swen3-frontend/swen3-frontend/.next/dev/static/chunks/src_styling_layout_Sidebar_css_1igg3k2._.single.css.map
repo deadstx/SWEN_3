@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/src/styling/layout/Sidebar.css"],"sourcesContent":[".sidebar {\n    width: 240px;\n    height: 100vh;\n    position: sticky;\n    top: 0;\n    display: flex;\n    flex-direction: column;\n    background-color: var(--sidebar-background);\n    color: var(--text-primary);\n    padding: 1.5rem 1rem;\n    box-sizing: border-box;\n}\n\n.sidebar__logo {\n    font-size: 1.1rem;\n    font-weight: 600;\n    margin-bottom: 2rem;\n    padding: 0 0.5rem;\n    color: var(--text-primary);\n}\n\n.sidebar__nav {\n    display: flex;\n    flex-direction: column;\n    gap: 0.25rem;\n}\n\n.sidebar__link {\n    color: var(--text-primary);\n    text-decoration: none;\n    padding: 0.6rem 0.75rem;\n    border-radius: 6px;\n    font-size: 0.95rem;\n    transition: background-color 0.15s ease, color 0.15s ease;\n}\n\n.sidebar__link:hover {\n    background-color: var(--background);\n    color: var(--text-primary);\n}\n\n.sidebar__toggle {\n\n    margin-top: 2rem;\n    padding: 0 0.5rem;\n}"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;AAaA;;;;;;;;AAQA;;;;;;AAMA;;;;;;;;;AASA;;;;;AAKA"}}]
+}

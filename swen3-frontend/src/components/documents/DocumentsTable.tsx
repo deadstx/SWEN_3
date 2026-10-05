@@ -1,10 +1,11 @@
 "use client";
 
 import BasicTable, { type Column } from "@/components/common/BasicTable";
-import BasicModal from "@/components/common/BasicModal";
 import type { DocumentResponse } from "@/data/model/Document";
 import { deleteDocumentById, fetchAllDocuments } from "@/data/repository/DocumentRepository";
 import { useEffect, useState } from "react";
+import DocumentDetailModal, {formatFileSize} from "@/components/documents/DocumentDetailModal";
+import DownloadButton from "@/components/common/DownloadButton";
 
 const columns: Column<DocumentResponse>[] = [
     { key: "id", label: "ID", align: "left" },
@@ -12,13 +13,20 @@ const columns: Column<DocumentResponse>[] = [
     {
         key: "fileSize",
         label: "Dateigröße",
-        render: (document) => `${(document.fileSize / 1024).toFixed(1)} KB`,
+        render: (document) => formatFileSize(document.fileSize),
     },
     {
         key: "uploadedAt",
         label: "Erstellt am",
         align: "right",
         render: (document) => new Date(document.uploadedAt).toLocaleString("de-AT"),
+    },
+
+    {
+        key: "action",
+        label: "Download",
+        align: "center",
+        render: (document) => <DownloadButton document={document} />,
     },
 ];
 
@@ -83,27 +91,12 @@ export default function DocumentsTable() {
                 onRowClick={setSelectedDocument}
             />
 
-            <BasicModal
-                isOpen={selectedDocument !== null}
+            <DocumentDetailModal
+                document={selectedDocument}
+                deleting={deleting}
                 onClose={closeModal}
-                title="Dokumentdetails"
-                footer={
-                    <button type="button" onClick={deleteSelectedDocument} disabled={deleting}>
-                        {deleting ? "Wird gelöscht..." : "Dokument löschen"}
-                    </button>
-                }
-            >
-                {selectedDocument && (
-                    <dl>
-                        <dt>Name</dt>
-                        <dd>{selectedDocument.name}</dd>
-                        <dt>Dateigröße</dt>
-                        <dd>{(selectedDocument.fileSize / 1024).toFixed(1)} KB</dd>
-                        <dt>Tags</dt>
-                        <dd>{selectedDocument.tags.length > 0 ? selectedDocument.tags.join(", ") : "Keine"}</dd>
-                    </dl>
-                )}
-            </BasicModal>
+                onDelete={deleteSelectedDocument}
+            />
         </>
     );
 }

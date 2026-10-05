@@ -1,0 +1,12 @@
+services:
+  frontend:
+    build:
+      context: ./swen3-frontend
+      dockerfile: Dockerfile.dev
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8081
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ./swen3-frontend:/app
+      - /app/node_modules
+      - /app/.next
