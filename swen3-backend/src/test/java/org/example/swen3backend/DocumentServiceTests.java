@@ -10,6 +10,8 @@ import org.example.swen3backend.service.DocumentNotFoundException;
 import org.example.swen3backend.service.DocumentService;
 import org.example.swen3backend.service.InvalidDocumentException;
 import org.example.swen3backend.validation.FieldValidator;
+import org.example.swen3backend.messaging.OcrMessage;
+import org.example.swen3backend.messaging.OcrMessageProducer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,17 +35,19 @@ class DocumentServiceTests {
     private DocumentCollectionRepository collectionRepository;
     private DocumentService service;
     private DocumentEntity document;
+    private OcrMessageProducer ocrMessageProducer;
 
     @BeforeEach
     void setUp() {
         repository = mock(DocumentRepository.class);
         collectionRepository = mock(DocumentCollectionRepository.class);
-        service = new DocumentService(repository, new DocumentMapper(), collectionRepository, new FieldValidator() );
+        ocrMessageProducer = mock(OcrMessageProducer.class);
+        service = new DocumentService(repository, new DocumentMapper(), collectionRepository,
+                new FieldValidator(), ocrMessageProducer);
         document = new DocumentEntity("test.pdf", PDF, PDF.length, UPLOADED_AT);
         document.getTags().add("existing");
 
         when(repository.findById(1L)).thenReturn(Optional.of(document));
-        // Das Mock-Repository gibt beim Speichern dasselbe Objekt zurück.
         when(repository.save(any(DocumentEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
     }
@@ -57,6 +61,7 @@ class DocumentServiceTests {
         assertNotNull(result.uploadedAt());
         assertEquals(List.of(), result.tags());
         verify(repository).save(argThat(saved -> Arrays.equals(PDF, saved.getContent())));
+        verify(ocrMessageProducer).sendOcrRequest(any(OcrMessage.class));
     }
 
     @Test
@@ -195,5 +200,14 @@ class DocumentServiceTests {
         deletionOrder.verify(collectionRepository).removeDocumentReferences(1L);
         deletionOrder.verify(repository).delete(document);
     }
+
+    @Test
+    void invalidUploadDoesNotSendMessage() {
+        assertThrows(InvalidDocumentException.class,
+                () -> service.upload("empty.pdf", new byte[0]));
+
+        verify(ocrMessageProducer, never()).sendOcrRequest(any());
+    }
+
 }
 

@@ -10,11 +10,15 @@ import org.example.swen3backend.repository.DocumentCollectionRepository;
 import org.example.swen3backend.validation.FieldValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
+import org.example.swen3backend.messaging.OcrMessage;
+import org.example.swen3backend.messaging.OcrMessageProducer;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -24,15 +28,17 @@ public class DocumentService {
     private final DocumentMapper documentMapper;
     private final DocumentCollectionRepository collectionRepository;
     private final FieldValidator fieldValidator;
+    private final OcrMessageProducer ocrMessageProducer;
 
     public DocumentResponse upload(String originalFilename, byte[] content) {
         String name = normalizeFilename(originalFilename);
         validateContent(content);
 
-        DocumentEntity document = new DocumentEntity(
-                name, content, content.length, Instant.now()
-        );
+        DocumentEntity document = new DocumentEntity(name, content, content.length, Instant.now());
         DocumentEntity saved = documentRepository.save(document);
+        log.info("Document saved id={}, name={}, size={} bytes", saved.getId(), saved.getName(), content.length);
+
+        ocrMessageProducer.sendOcrRequest(new OcrMessage(saved.getId(), saved.getName()));
 
         return documentMapper.toDto(saved);
     }

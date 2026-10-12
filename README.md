@@ -1,6 +1,10 @@
 
 Project Startup 
 
+How to start project with Backend, Woker and Frontend:
+docker compose build
+docker compose up
+
 Frist Start
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 
