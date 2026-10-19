@@ -6,6 +6,7 @@ import org.example.swen3backend.dto.DocumentCollectionResponse;
 import org.example.swen3backend.service.DocumentCollectionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/collections")
+@CrossOrigin(origins = "http://localhost:3000")
 @RequiredArgsConstructor
 public class DocumentCollectionController {
 

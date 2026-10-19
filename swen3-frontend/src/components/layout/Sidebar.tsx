@@ -16,6 +16,9 @@ export default function Sidebar() {
                 <Link href="/documents" className="sidebar__link">
                     Dokumente
                 </Link>
+                <Link href="/collections" className="sidebar__link">
+                    Collections
+                </Link>
                 <Link href="/upload" className="sidebar__link">
                     Upload
                 </Link>
