@@ -12,11 +12,14 @@ import org.example.swen3backend.service.InvalidDocumentException;
 import org.example.swen3backend.validation.FieldValidator;
 import org.example.swen3backend.messaging.OcrMessage;
 import org.example.swen3backend.messaging.OcrMessageProducer;
+import org.example.swen3backend.storage.DocumentStorage;
+import org.example.swen3backend.storage.StorageException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -36,20 +39,27 @@ class DocumentServiceTests {
     private DocumentService service;
     private DocumentEntity document;
     private OcrMessageProducer ocrMessageProducer;
+    private DocumentStorage documentStorage;
 
     @BeforeEach
     void setUp() {
         repository = mock(DocumentRepository.class);
         collectionRepository = mock(DocumentCollectionRepository.class);
         ocrMessageProducer = mock(OcrMessageProducer.class);
+        documentStorage = mock(DocumentStorage.class);
+        when(documentStorage.getBucket()).thenReturn("documents");
         service = new DocumentService(repository, new DocumentMapper(), collectionRepository,
-                new FieldValidator(), ocrMessageProducer);
+                new FieldValidator(), ocrMessageProducer, documentStorage);
         document = new DocumentEntity("test.pdf", PDF, PDF.length, UPLOADED_AT);
         document.getTags().add("existing");
 
         when(repository.findById(1L)).thenReturn(Optional.of(document));
         when(repository.save(any(DocumentEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> {
+                    DocumentEntity saved = invocation.getArgument(0);
+                    org.springframework.test.util.ReflectionTestUtils.setField(saved, "id", 1L);
+                    return saved;
+                });
     }
 
     @Test
@@ -60,8 +70,48 @@ class DocumentServiceTests {
         assertEquals(PDF.length, result.fileSize());
         assertNotNull(result.uploadedAt());
         assertEquals(List.of(), result.tags());
-        verify(repository).save(argThat(saved -> Arrays.equals(PDF, saved.getContent())));
-        verify(ocrMessageProducer).sendOcrRequest(any(OcrMessage.class));
+        verify(repository).save(argThat(saved -> saved.getContent() == null
+                && saved.getObjectKey().startsWith("documents/")));
+        var key = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(documentStorage).upload(key.capture(), eq(PDF));
+        verify(ocrMessageProducer).sendOcrRequest(argThat(message ->
+                message.bucket().equals("documents") && message.objectKey().equals(key.getValue())
+                        && message.fileName().equals("test.pdf")));
+    }
+
+    @Test
+    void storageFailureDoesNotSaveMetadataOrSendMessage() {
+        doThrow(new StorageException("unavailable", new RuntimeException()))
+                .when(documentStorage).upload(anyString(), any());
+        assertThrows(StorageException.class, () -> service.upload("test.pdf", PDF));
+        verify(repository, never()).save(any());
+        verifyNoInteractions(ocrMessageProducer);
+    }
+
+    @Test
+    void rolledBackUploadCleansUpRustfsObject() {
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            doThrow(new RuntimeException("queue unavailable"))
+                    .when(ocrMessageProducer).sendOcrRequest(any());
+            assertThrows(RuntimeException.class, () -> service.upload("test.pdf", PDF));
+            var key = org.mockito.ArgumentCaptor.forClass(String.class);
+            verify(documentStorage).upload(key.capture(), eq(PDF));
+            TransactionSynchronizationManager.getSynchronizations()
+                    .forEach(callback -> callback.afterCompletion(
+                            TransactionSynchronization.STATUS_ROLLED_BACK));
+            verify(documentStorage).delete(key.getValue());
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @Test
+    void deleteAlsoRemovesRustfsObject() {
+        when(repository.findById(2L)).thenReturn(Optional.of(
+                new DocumentEntity("new.pdf", "documents/new.pdf", PDF.length, UPLOADED_AT)));
+        service.delete(2L);
+        verify(documentStorage).delete("documents/new.pdf");
     }
 
     @Test

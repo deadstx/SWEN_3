@@ -29,8 +29,12 @@ public class DocumentEntity {
     @Column(nullable = false)
     private Instant uploadedAt;
 
-    @Column(nullable = false)
+    // Legacy PDFs remain readable in the database; new uploads use objectKey.
+    @Column(nullable = true)
     private byte[] content;
+
+    @Column(length = 512)
+    private String objectKey;
 
     @ElementCollection
     //Sammlung einfacher Werte (String), die zur DocumentEntity gehört
@@ -42,6 +46,13 @@ public class DocumentEntity {
     public DocumentEntity(String name, byte[] content, long fileSize, Instant uploadedAt) {
         this.name = name;
         this.content = content;
+        this.fileSize = fileSize;
+        this.uploadedAt = uploadedAt;
+    }
+
+    public DocumentEntity(String name, String objectKey, long fileSize, Instant uploadedAt) {
+        this.name = name;
+        this.objectKey = objectKey;
         this.fileSize = fileSize;
         this.uploadedAt = uploadedAt;
     }

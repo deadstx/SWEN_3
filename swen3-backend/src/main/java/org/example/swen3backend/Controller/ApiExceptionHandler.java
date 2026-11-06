@@ -5,6 +5,7 @@ import org.example.swen3backend.service.CollectionNotFoundException;
 import org.example.swen3backend.service.DocumentNotFoundException;
 import org.example.swen3backend.service.InvalidDocumentException;
 import org.example.swen3backend.service.MessageQueueException;
+import org.example.swen3backend.storage.StorageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,6 +15,13 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @Slf4j
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+
+    @ExceptionHandler(StorageException.class)
+    public ProblemDetail handleStorage(StorageException exception) {
+        log.error("Document storage error", exception);
+        return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE,
+                "Der Dokumentenspeicher ist derzeit nicht erreichbar.");
+    }
 
     @ExceptionHandler({DocumentNotFoundException.class, CollectionNotFoundException.class})
     public ProblemDetail handleNotFound(RuntimeException exception) {

@@ -17,6 +17,10 @@ import org.example.swen3backend.messaging.OcrMessageProducer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
+import org.example.swen3backend.storage.DocumentStorage;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -29,16 +33,36 @@ public class DocumentService {
     private final DocumentCollectionRepository collectionRepository;
     private final FieldValidator fieldValidator;
     private final OcrMessageProducer ocrMessageProducer;
+    private final DocumentStorage documentStorage;
 
     public DocumentResponse upload(String originalFilename, byte[] content) {
         String name = normalizeFilename(originalFilename);
         validateContent(content);
 
-        DocumentEntity document = new DocumentEntity(name, content, content.length, Instant.now());
+        String objectKey = "documents/" + UUID.randomUUID() + ".pdf";
+        documentStorage.upload(objectKey, content);
+        // RustFS is outside the SQL transaction: clean up if metadata or messaging fails.
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status == STATUS_ROLLED_BACK) {
+                        try {
+                            documentStorage.delete(objectKey);
+                        } catch (RuntimeException exception) {
+                            log.error("Could not clean up rolled-back upload {}", objectKey, exception);
+                        }
+                    }
+                }
+            });
+        }
+
+        DocumentEntity document = new DocumentEntity(name, objectKey, content.length, Instant.now());
         DocumentEntity saved = documentRepository.save(document);
         log.info("Document saved id={}, name={}, size={} bytes", saved.getId(), saved.getName(), content.length);
 
-        ocrMessageProducer.sendOcrRequest(new OcrMessage(saved.getId(), saved.getName()));
+        ocrMessageProducer.sendOcrRequest(new OcrMessage(saved.getId(), saved.getName(),
+                documentStorage.getBucket(), objectKey));
 
         return documentMapper.toDto(saved);
     }
@@ -80,6 +104,9 @@ public class DocumentService {
     public void delete(long id) {
         DocumentEntity document = findDocument(id);
         collectionRepository.removeDocumentReferences(id);
+        if (document.getObjectKey() != null) {
+            documentStorage.delete(document.getObjectKey());
+        }
         documentRepository.delete(document);
     }
 
