@@ -109,6 +109,17 @@ services:
       interval: 10s
       retries: 12
 
+  indexing-worker:
+    build: ./swen3-indexing-worker
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+
   frontend:
     build:
       context: ./swen3-frontend

@@ -1,0 +1,2 @@
+pika
+elasticsearch>=8,<9
