@@ -17,6 +17,10 @@ export function fetchAllDocuments(): Promise<DocumentResponse[]> {
     return request<DocumentResponse[]>("/api/documents", { cache: "no-store" });
 }
 
+export function searchDocuments(query: string): Promise<DocumentResponse[]> {
+    return request<DocumentResponse[]>(`/api/documents/search?q=${encodeURIComponent(query)}`, { cache: "no-store" });
+}
+
 // DELETE
 export function deleteDocumentById(id: number): Promise<void> {
     return request<void>(`/api/documents/${id}`, { method: "DELETE" });

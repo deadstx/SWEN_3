@@ -1,0 +1,23 @@
+.documents-search {
+    width: 100%;
+    max-width: 24rem;
+    margin-bottom: 1rem;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.925rem;
+    color: var(--foreground);
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.documents-search::placeholder {
+    color: var(--text-secondary);
+}
+
+.documents-search:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}

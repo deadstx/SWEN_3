@@ -1,8 +1,10 @@
 "use client";
 
+
+import "@/styling/documents/DocumentSearch.css";
 import BasicTable, { type Column } from "@/components/common/BasicTable";
 import type { DocumentResponse } from "@/data/model/Document";
-import { deleteDocumentById, fetchAllDocuments } from "@/data/repository/DocumentRepository";
+import { deleteDocumentById, fetchAllDocuments, searchDocuments } from "@/data/repository/DocumentRepository";
 import { useEffect, useState } from "react";
 import DocumentDetailModal, {formatFileSize} from "@/components/documents/DocumentDetailModal";
 import DownloadButton from "@/components/common/DownloadButton";
@@ -36,27 +38,34 @@ export default function DocumentsTable() {
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [query, setQuery] = useState("");
 
     useEffect(() => {
         let active = true;
-
-        fetchAllDocuments()
-            .then((result) => {
-                if (active) setDocuments(result);
-            })
-            .catch((loadError: unknown) => {
-                if (active) {
-                    setError(loadError instanceof Error ? loadError.message : "Dokumente konnten nicht geladen werden.");
-                }
-            })
-            .finally(() => {
-                if (active) setLoading(false);
-            });
+        const timer = setTimeout(() => {
+            const load = query.trim() ? searchDocuments(query.trim()) : fetchAllDocuments();
+            load
+                .then((result) => {
+                    if (active) {
+                        setDocuments(result);
+                        setError(null);
+                    }
+                })
+                .catch((loadError: unknown) => {
+                    if (active) {
+                        setError(loadError instanceof Error ? loadError.message : "Dokumente konnten nicht geladen werden.");
+                    }
+                })
+                .finally(() => {
+                    if (active) setLoading(false);
+                });
+        }, 300);
 
         return () => {
             active = false;
+            clearTimeout(timer);
         };
-    }, []);
+    }, [query]);
 
     const closeModal = () => setSelectedDocument(null);
 
@@ -82,6 +91,14 @@ export default function DocumentsTable() {
     return (
         <>
             {error && <p role="alert">{error}</p>}
+
+            <input
+                type="search"
+                className="documents-search"
+                placeholder="Dokumente durchsuchen..."
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+            />
 
             <BasicTable<DocumentResponse>
                 caption="Alle Dokumente"
