@@ -1,28 +1,53 @@
+# Document Management System
 
-## Sprint 4: RustFS storage
+Ein Dokumentenmanagementsystem zum **Archivieren, Verarbeiten, Durchsuchen und Verwalten von PDF-Dokumenten**.
 
-New PDF uploads are stored in RustFS. PostgreSQL stores metadata and an `objectKey`.
-Existing PDFs in PostgreSQL are preserved, but are not migrated to RustFS automatically.
-The `documents` bucket is created on the first upload. Object keys use UUIDs so identical
-filenames do not overwrite each other. Storage errors return HTTP 503.
+Hochgeladene PDFs werden in einem Objektspeicher abgelegt, per **OCR** automatisch in Text umgewandelt und in **Elasticsearch** für die **Volltext- und Fuzzy-Suche** indexiert. Dokumente lassen sich über Metadaten, Tags und Sammlungen verwalten.
 
-Start Docker Desktop, then run:
+Projekt im Rahmen des **SWEN3 BIF5 Semesterprojekts**. Aktueller Stand: **Sprint 4** (Worker Services: OCR, Objektspeicher, Elasticsearch).
 
-```sh
-docker compose up --build
+## Architektur
+
+```
+Frontend (Next.js) ──► Backend (Spring Boot) ──► RustFS (PDF-Dateien)
+                            │   │
+                            │   └──► PostgreSQL (Metadaten, objectKey)
+                            ▼
+                       ocr.queue (RabbitMQ)
+                            ▼
+                OCR-Worker (Python, Tesseract)
+                  lädt PDF aus RustFS
+                            ▼
+                      index.queue (RabbitMQ)
+                            ▼
+               Indexing-Worker (Python) ──► Elasticsearch
+                                                 ▲
+Frontend-Suche ──► Backend /api/documents/search ┘
 ```
 
-For this stage the frontend is at http://localhost:3000 and the RustFS console is at
-http://localhost:9001. Local development credentials are `paperlessadmin` /
-`paperless-local-secret`. Override them with `STORAGE_ACCESS_KEY` and `STORAGE_SECRET_KEY`
-for both RustFS and the backend through Compose variable substitution.
+| Service | Technologie | Port | Aufgabe |
+|---|---|---|---|
+| `frontend` | Next.js | 3000 | Web-UI (Dashboard, Dokumente, Sammlungen, Upload, Suche) |
+| `backend` | Spring Boot (Java 25) | 8081 | REST-API, Validierung, Speicherung, Suche |
+| `postgres` | PostgreSQL 17 | 5432 | Metadaten (Name, Größe, Tags, `objectKey`, Sammlungen) |
+| `rustfs` | RustFS (S3-kompatibel) | 9000 / 9001 | Ablage der PDFs (Bucket `documents`), Konsole auf 9001 |
+| `rabbitmq` | RabbitMQ 4 | 5672 / 15672 | Queues zwischen Backend und Workern |
+| `ocr-worker` | Python, Tesseract, Poppler | – | PDF laden, Text erkennen |
+| `indexing-worker` | Python | – | Text in Elasticsearch schreiben |
+| `elasticsearch` | Elasticsearch 8.15 | 9200 | Volltext- und Fuzzy-Suche |
 
-Upload a PDF using the existing frontend. In the RustFS console, open the `documents`
-bucket: the file should appear under `documents/<uuid>.pdf`. Download it from the console
-and check that it matches the original. Deleting the document through the application
-also deletes its RustFS object.
+## Ablauf eines Uploads
 
-Worker contract: queue `ocr.queue`, JSON body:
+1. Das Frontend sendet das PDF an `POST /api/documents`.
+2. Das Backend prüft die Datei (nur PDF, nicht leer) und legt sie in RustFS unter `documents/<uuid>.pdf` ab. Die Metadaten und der `objectKey` kommen in PostgreSQL. Schlägt das Speichern der Metadaten fehl, wird das PDF in RustFS wieder entfernt.
+3. Das Backend sendet eine Nachricht an `ocr.queue`.
+4. Der OCR-Worker lädt das PDF aus RustFS, wandelt die Seiten in Bilder um, erkennt den Text mit Tesseract (Deutsch + Englisch) und sendet ihn an `index.queue`.
+5. Der Indexing-Worker schreibt den Text in den Elasticsearch-Index `documents` (Dokument-ID = ID aus PostgreSQL).
+6. Die Suche im Frontend ruft `GET /api/documents/search?q=...` auf. Das Backend fragt Elasticsearch ab (Felder `text` und `fileName`, `fuzziness: AUTO`) und lädt die Treffer aus PostgreSQL.
+
+## Queues und Nachrichtenformate
+
+`ocr.queue` (Backend → OCR-Worker):
 
 ```json
 {
@@ -33,51 +58,100 @@ Worker contract: queue `ocr.queue`, JSON body:
 }
 ```
 
-The future Python worker should use the S3 API at `http://rustfs:9000` inside Compose
-(`http://localhost:9000` when running locally), region `us-east-1`, and path-style
-addressing. It must fetch the PDF using `bucket` and `objectKey` from the message.
-The existing Java OCR worker still only logs jobs; its message record was updated
-to match the new fields. Replace that worker when implementing Python OCR.
+`index.queue` (OCR-Worker → Indexing-Worker):
 
-Project Startup 
+```json
+{
+  "documentId": 42,
+  "fileName": "HelloWorld.pdf",
+  "text": "Hello World ..."
+}
+```
 
-How to start project with Backend, Woker and Frontend:
-docker compose build
-docker compose up
+Beide Queues sind `durable`. Fehlerhafte Nachrichten werden von den Workern verworfen (kein Requeue), damit die Queue nicht blockiert.
 
-Frist Start
+## REST-API
+
+Dokumente (`/api/documents`):
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| POST | `/api/documents` | PDF hochladen (`multipart/form-data`, Feld `file`) |
+| GET | `/api/documents` | Alle Dokumente |
+| GET | `/api/documents/{id}` | Ein Dokument |
+| GET | `/api/documents/{id}/download` | PDF aus RustFS (inline, für Vorschau und Download) |
+| GET | `/api/documents/search?q=...` | Volltext- und Fuzzy-Suche |
+| PATCH | `/api/documents/{id}` | Name und/oder Tags ändern |
+| DELETE | `/api/documents/{id}` | Löscht Metadaten, PDF in RustFS und den Suchindex-Eintrag |
+
+Sammlungen (`/api/collections`): `POST`, `GET`, `GET /{id}`, `DELETE /{id}`, `PUT /{id}/documents/{documentId}`, `DELETE /{id}/documents/{documentId}`.
+
+Fehler werden als HTTP-Problem-Responses geliefert. Probleme mit dem Objektspeicher ergeben HTTP 503.
+
+## Starten
+
+Voraussetzung: Docker Desktop.
+
+```sh
+docker compose up --build
+```
+
+Entwicklungsmodus (Frontend mit Hot Reload):
+
+```sh
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
 
-Afterwards 
+| Was | URL |
+|---|---|
+| Frontend | http://localhost:3000 |
+| Backend | http://localhost:8081 |
+| RustFS-Konsole | http://localhost:9001 |
+| RabbitMQ-Verwaltung | http://localhost:15672 (`guest` / `guest`) |
+| Elasticsearch | http://localhost:9200 |
 
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up 
+Die lokalen Zugangsdaten für RustFS sind `paperlessadmin` / `paperless-local-secret`. Sie lassen sich über die Umgebungsvariablen `STORAGE_ACCESS_KEY` und `STORAGE_SECRET_KEY` überschreiben (gilt für RustFS, Backend und OCR-Worker).
 
+## Abnahmetest (Sprint 4)
 
+1. `docker compose up --build` ausführen und warten, bis alle Container laufen.
+2. `HelloWorld.pdf` im Frontend unter http://localhost:3000/upload hochladen.
+3. Optional prüfen: `docker compose logs ocr-worker` zeigt `OCR done`, `docker compose logs indexing-worker` zeigt `Indexed documentId=...`.
+4. Unter http://localhost:3000/documents im Suchfeld nach `Hello` suchen. `HelloWorld.pdf` erscheint in der Liste.
 
-# Document Management System
+Direkt prüfen, was im Index liegt:
 
-A document management system for **archiving, processing, searching, and managing digital documents**.
+```sh
+curl "http://localhost:9200/documents/_search?q=Hello"
+```
 
-Uploaded documents are automatically processed using **OCR**, indexed for **full-text and fuzzy search**, and summarized using **Generative AI**. Documents can be managed through their metadata and tags.
+## Hinweise
 
-The project also includes asynchronous processing, batch processing, and additional use cases.
+- PDFs, die vor Sprint 4 hochgeladen wurden, sind nicht im Suchindex, weil ihr OCR-Job nie lief. Sie müssen neu hochgeladen werden.
+- Der Elasticsearch-Python-Client ist auf Version 8 festgelegt (`elasticsearch>=8,<9`), passend zum Server 8.15.
+- Als Objektspeicher wird RustFS verwendet (S3-kompatibel) statt MinIO. Der Zugriff erfolgt über die S3-API mit Path-Style-Adressierung und der Region `us-east-1`.
 
-## Documentation
+## Tests
 
-For detailed information, please refer to the following documentation:
+Unit-Tests des Backends laufen beim Docker-Build mit, lokal im Ordner `swen3-backend`:
 
-- [SETUP.md](SETUP.md) – Setup and installation
-- [API_DOCUMENTATION.md](API_DOCUMENTATION.md) – REST API documentation
-- [ARCHITECTURE.md](ARCHITECTURE.md) – System architecture
-- [USE_CASES.md](USE_CASES.md) – Use cases
-- [TESTING.md](TESTING.md) – Testing and integration tests
-- [BATCH_PROCESSING.md](BATCH_PROCESSING.md) – Batch processing
+```sh
+./mvnw test
+```
 
-This project was developed as part of the **SWEN3 BIF5 Semester Project**.
+## Projektstruktur
 
+```
+swen3-backend/           Spring Boot REST-API
+swen3-frontend/          Next.js Web-UI
+swen3-ocr-worker-py/     Python OCR-Worker
+swen3-indexing-worker/   Python Indexing-Worker
+docker-compose.yml       Alle Services
+docker-compose.dev.yml   Overrides für die Entwicklung
+```
 
-**Contributors and Collaborators**
+## Beteiligte
 
-Lars Hosnedl - deadstx
-Elena Dordevic - elenaDord
-Abdussalim Sen - salimsn
+- Lars Hosnedl – deadstx
+- Elena Dordevic – elenaDord
+- Abdussalim Sen – salimsn
