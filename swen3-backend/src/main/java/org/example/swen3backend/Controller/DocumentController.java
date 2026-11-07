@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ContentDisposition;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
 import java.net.URI;
@@ -51,6 +52,11 @@ public class DocumentController {
     @GetMapping
     public List<DocumentResponse> getAll() {
         return documentService.getAll();
+    }
+
+    @GetMapping("/search")
+    public List<DocumentResponse> search(@RequestParam("q") String q) {
+        return documentService.search(q);
     }
 
     @GetMapping("/{id}")

@@ -5,6 +5,7 @@ import org.example.swen3backend.dto.DocumentResponse;
 import org.example.swen3backend.dto.UpdateDocumentRequest;
 import org.example.swen3backend.entity.DocumentEntity;
 import org.example.swen3backend.mapper.DocumentMapper;
+import org.example.swen3backend.search.DocumentSearch;
 import org.example.swen3backend.repository.DocumentRepository;
 import org.example.swen3backend.repository.DocumentCollectionRepository;
 import org.example.swen3backend.validation.FieldValidator;
@@ -34,6 +35,7 @@ public class DocumentService {
     private final FieldValidator fieldValidator;
     private final OcrMessageProducer ocrMessageProducer;
     private final DocumentStorage documentStorage;
+    private final DocumentSearch documentSearch;
 
     public DocumentResponse upload(String originalFilename, byte[] content) {
         String name = normalizeFilename(originalFilename);
@@ -73,6 +75,13 @@ public class DocumentService {
 
     public DocumentResponse getById(long id) {
         return documentMapper.toDto(findDocument(id));
+    }
+
+    public List<DocumentResponse> search(String query) {
+        if (query == null || query.isBlank()) {
+            return getAll();
+        }
+        return documentMapper.toDtoList(documentRepository.findAllById(documentSearch.search(query.strip())));
     }
 
     public byte[] downloadById(long id) {
@@ -115,6 +124,7 @@ public class DocumentService {
         if (document.getObjectKey() != null) {
             documentStorage.delete(document.getObjectKey());
         }
+        documentSearch.delete(id); // auch aus elastic search löschen wichtig
         documentRepository.delete(document);
     }
 

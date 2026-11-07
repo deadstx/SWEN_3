@@ -5,6 +5,7 @@ import org.example.swen3backend.dto.UpdateDocumentRequest;
 import org.example.swen3backend.entity.DocumentEntity;
 import org.example.swen3backend.mapper.DocumentMapper;
 import org.example.swen3backend.repository.DocumentRepository;
+import org.example.swen3backend.search.DocumentSearch;
 import org.example.swen3backend.repository.DocumentCollectionRepository;
 import org.example.swen3backend.service.DocumentNotFoundException;
 import org.example.swen3backend.service.DocumentService;
@@ -49,7 +50,7 @@ class DocumentServiceTests {
         documentStorage = mock(DocumentStorage.class);
         when(documentStorage.getBucket()).thenReturn("documents");
         service = new DocumentService(repository, new DocumentMapper(), collectionRepository,
-                new FieldValidator(), ocrMessageProducer, documentStorage);
+                new FieldValidator(), ocrMessageProducer, documentStorage, mock(DocumentSearch.class));
         document = new DocumentEntity("test.pdf", PDF, PDF.length, UPLOADED_AT);
         document.getTags().add("existing");
 

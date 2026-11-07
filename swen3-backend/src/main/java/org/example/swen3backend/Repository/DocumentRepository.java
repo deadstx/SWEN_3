@@ -11,6 +11,8 @@ public interface DocumentRepository extends Repository<DocumentEntity, Long> {
 
     List<DocumentEntity> findAll();
 
+    List<DocumentEntity> findAllById(Iterable<Long> ids);
+
     Optional<DocumentEntity> findById(Long id);
 
     void delete(DocumentEntity document);
