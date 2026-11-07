@@ -3,6 +3,8 @@
 import BasicModal from "@/components/common/BasicModal";
 import type { DocumentResponse } from "@/data/model/Document";
 import "@/styling/documents/DocumentDetailModal.css";
+import {fetchDocumentBlobById} from "@/data/repository/DocumentRepository";
+import {useEffect, useState} from "react";
 
 type DocumentDetailModalProps = {
     document: DocumentResponse | null;
@@ -14,6 +16,36 @@ type DocumentDetailModalProps = {
 export const formatFileSize = (bytes: number) => `${(bytes / 1024).toFixed(1)} KB`;
 
 export default function DocumentDetailModal({ document, deleting, onClose, onDelete }: DocumentDetailModalProps) {
+
+    const documentId = document?.id;
+    const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+    const [previewFailed, setPreviewFailed] = useState(false);
+
+    useEffect(() => {
+        if (documentId === undefined) return;
+
+        let cancelled = false;
+        let url: string | null = null;
+
+        fetchDocumentBlobById(documentId)
+            .then((blob) => {
+                if (cancelled) return;
+                url = URL.createObjectURL(blob);
+                setPdfUrl(url);
+            })
+            .catch(() => {
+                if (!cancelled) setPreviewFailed(true);
+            });
+
+        return () => {
+            cancelled = true;
+            if (url) URL.revokeObjectURL(url);
+            setPdfUrl(null);
+            setPreviewFailed(false);
+        };
+    }, [documentId]);
+
+
     return (
         <BasicModal
             isOpen={document !== null}
@@ -41,6 +73,7 @@ export default function DocumentDetailModal({ document, deleting, onClose, onDel
             }
         >
             {document && (
+                <>
                 <dl className="document-detail">
                     <dt className="document-detail__label">Name</dt>
                     <dd className="document-detail__value document-detail__value--strong">{document.name}</dd>
@@ -68,6 +101,15 @@ export default function DocumentDetailModal({ document, deleting, onClose, onDel
                         )}
                     </dd>
                 </dl>
+                    {previewFailed ? (
+                        <p className="document-detail__empty">Vorschau nicht verfügbar.</p>
+                    ) : pdfUrl ? (
+                        <iframe src={pdfUrl} width="100%" height="600" title={document.name} />
+                        ) : (
+                            <p>Lädt ...</p>
+                    )
+                    }
+                </>
             )}
         </BasicModal>
     );

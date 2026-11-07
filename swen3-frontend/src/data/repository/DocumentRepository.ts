@@ -22,6 +22,9 @@ export function deleteDocumentById(id: number): Promise<void> {
     return request<void>(`/api/documents/${id}`, { method: "DELETE" });
 }
 
+export function fetchDocumentBlobById(id: number): Promise<Blob> {
+    return requestBlob(`/api/documents/${id}/download`);
+}
 
 // DOWNLOAD
 export async function downloadDocumentById(id: number, fileName: string): Promise<void> {
