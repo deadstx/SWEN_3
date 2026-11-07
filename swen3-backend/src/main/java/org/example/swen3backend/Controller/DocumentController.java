@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ContentDisposition;
 
 import java.io.IOException;
 import java.net.URI;
@@ -54,6 +56,17 @@ public class DocumentController {
     @GetMapping("/{id}")
     public DocumentResponse getById(@PathVariable("id") long id) {
         return documentService.getById(id);
+    }
+
+    @GetMapping("/{id}/download")
+    public ResponseEntity<byte[]> download(@PathVariable("id") long id) {
+        String name = documentService.getById(id).name();
+        byte[] content = documentService.downloadById(id);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename(name).build().toString())
+                .body(content);
     }
 
     @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)

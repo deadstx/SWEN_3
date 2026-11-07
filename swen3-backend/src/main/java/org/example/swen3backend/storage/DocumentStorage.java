@@ -31,6 +31,14 @@ public class DocumentStorage {
         }
     }
 
+    public byte[] download(String objectKey) {
+        try {
+            return client.getObjectAsBytes(request -> request.bucket(bucket).key(objectKey)).asByteArray();
+        } catch (SdkException exception) {
+            throw new StorageException("Could not download PDF from RustFS", exception);
+        }
+    }
+
     public void delete(String objectKey) {
         try {
             client.deleteObject(request -> request.bucket(bucket).key(objectKey));

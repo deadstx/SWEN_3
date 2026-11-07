@@ -75,6 +75,14 @@ public class DocumentService {
         return documentMapper.toDto(findDocument(id));
     }
 
+    public byte[] downloadById(long id) {
+        DocumentEntity document = findDocument(id);
+        if (document.getObjectKey() == null) {
+            throw new DocumentNotFoundException(id);
+        }
+        return documentStorage.download(document.getObjectKey());
+    }
+
     public DocumentResponse update(long id, UpdateDocumentRequest request) {
         DocumentEntity document = findDocument(id);
         if (request.name() == null && request.tags() == null) {
