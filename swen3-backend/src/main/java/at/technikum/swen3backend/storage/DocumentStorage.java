@@ -1,5 +1,6 @@
 package at.technikum.swen3backend.storage;
 
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.exception.SdkException;
@@ -10,15 +11,12 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 @Service
 public class DocumentStorage {
     private final S3Client client;
+    @Getter
     private final String bucket;
 
     public DocumentStorage(S3Client client, @Value("${storage.bucket}") String bucket) {
         this.client = client;
         this.bucket = bucket;
-    }
-
-    public String getBucket() {
-        return bucket;
     }
 
     public void upload(String objectKey, byte[] content) {

@@ -46,7 +46,6 @@ public class DocumentService {
 
         String objectKey = "documents/" + UUID.randomUUID() + ".pdf";
         documentStorage.upload(objectKey, content);
-        // RustFS is outside the SQL transaction: clean up if metadata or messaging fails.
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
