@@ -16,7 +16,9 @@ public class DocumentMapper extends EntityMapper<DocumentEntity, DocumentRespons
                 document.getName(),
                 document.getFileSize(),
                 document.getUploadedAt(),
-                List.copyOf(document.getTags())
+                List.copyOf(document.getTags()),
+                document.getSummary(),
+                document.getSummaryStatus()
         );
     }
 }

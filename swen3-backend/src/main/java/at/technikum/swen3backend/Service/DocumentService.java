@@ -2,6 +2,7 @@ package at.technikum.swen3backend.Service;
 
 import at.technikum.swen3backend.exception.DocumentNotFoundException;
 import at.technikum.swen3backend.exception.InvalidDocumentException;
+import at.technikum.swen3backend.exception.MessageQueueException;
 
 import lombok.RequiredArgsConstructor;
 import at.technikum.swen3backend.DTO.DocumentResponse;
@@ -65,8 +66,23 @@ public class DocumentService {
         DocumentEntity saved = documentRepository.save(document);
         log.info("Document saved id={}, name={}, size={} bytes", saved.getId(), saved.getName(), content.length);
 
-        ocrMessageProducer.sendOcrRequest(new OcrMessage(saved.getId(), saved.getName(),
-                documentStorage.getBucket(), objectKey));
+        OcrMessage job = new OcrMessage(saved.getId(), saved.getName(),
+                documentStorage.getBucket(), objectKey);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        ocrMessageProducer.sendOcrRequest(job);
+                    } catch (MessageQueueException exception) {
+                        log.error("Could not queue OCR for document id={}", saved.getId(), exception);
+                        documentRepository.finishSummary(saved.getId(), objectKey, null, "FAILED");
+                    }
+                }
+            });
+        } else {
+            ocrMessageProducer.sendOcrRequest(job);
+        }
 
         return documentMapper.toDto(saved);
     }

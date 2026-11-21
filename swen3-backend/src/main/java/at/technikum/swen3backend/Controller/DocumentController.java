@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,15 +25,16 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/documents")
 @CrossOrigin(origins = "http://localhost:3000")
 @RequiredArgsConstructor
 
 public class DocumentController {
 
+    private static final String DOCUMENTS = "/api/documents";
+
     private final DocumentService documentService;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(path = {DOCUMENTS, "/"}, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<DocumentResponse> upload(
             @RequestPart("file") MultipartFile file
     ) throws IOException {
@@ -49,22 +49,22 @@ public class DocumentController {
         return ResponseEntity.created(location).body(response);
     }
 
-    @GetMapping
+    @GetMapping(DOCUMENTS)
     public List<DocumentResponse> getAll() {
         return documentService.getAll();
     }
 
-    @GetMapping("/search")
+    @GetMapping(DOCUMENTS + "/search")
     public List<DocumentResponse> search(@RequestParam("q") String q) {
         return documentService.search(q);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(DOCUMENTS + "/{id}")
     public DocumentResponse getById(@PathVariable("id") long id) {
         return documentService.getById(id);
     }
 
-    @GetMapping("/{id}/download")
+    @GetMapping(DOCUMENTS + "/{id}/download")
     public ResponseEntity<byte[]> download(@PathVariable("id") long id) {
         String name = documentService.getById(id).name();
         byte[] content = documentService.downloadById(id);
@@ -75,7 +75,7 @@ public class DocumentController {
                 .body(content);
     }
 
-    @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PatchMapping(value = DOCUMENTS + "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public DocumentResponse update(
             @PathVariable("id") long id,
             @RequestBody UpdateDocumentRequest request
@@ -83,7 +83,7 @@ public class DocumentController {
         return documentService.update(id, request);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping(DOCUMENTS + "/{id}")
     public ResponseEntity<Void> delete(@PathVariable("id") long id) {
         documentService.delete(id);
         return ResponseEntity.noContent().build();

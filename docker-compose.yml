@@ -44,6 +44,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "documentuser", "-d", "documentdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
   rabbitmq:
     image: rabbitmq:4-management
@@ -75,12 +80,13 @@ services:
       SPRING_RABBITMQ_PASSWORD: guest
       ELASTICSEARCH_URL: http://elasticsearch:9200
     ports:
+      - "8080:8080"
       - "8081:8080"
     depends_on:
       rustfs:
         condition: service_healthy
       postgres:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       elasticsearch:
@@ -88,6 +94,7 @@ services:
 
   ocr-worker:
     build: ./swen3-ocr-worker-py
+    restart: unless-stopped
     environment:
       RABBITMQ_HOST: rabbitmq
       STORAGE_ENDPOINT: http://rustfs:9000
@@ -97,6 +104,17 @@ services:
       rabbitmq:
         condition: service_healthy
       rustfs:
+        condition: service_healthy
+
+  genai-worker:
+    build: ./swen3-genai-worker
+    restart: unless-stopped
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.1-flash-lite}
+    depends_on:
+      rabbitmq:
         condition: service_healthy
 
   elasticsearch:

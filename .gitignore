@@ -4296,3 +4296,7 @@
 /node_modules/react/react.react-server.js
 /node_modules/react/README.md
 /node_modules/.package-lock.json
+
+# Sprint 5 local configuration and build output
+/.env
+/swen3-android/build/

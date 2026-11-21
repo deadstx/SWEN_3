@@ -8,6 +8,8 @@ public record DocumentResponse(
         String name,
         long fileSize,
         Instant uploadedAt,
-        List<String> tags
+        List<String> tags,
+        String summary,
+        String summaryStatus
 ) {
 }

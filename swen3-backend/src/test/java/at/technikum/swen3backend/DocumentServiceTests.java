@@ -70,6 +70,8 @@ class DocumentServiceTests {
         assertEquals(PDF.length, result.fileSize());
         assertNotNull(result.uploadedAt());
         assertEquals(List.of(), result.tags());
+        assertEquals("PENDING", result.summaryStatus());
+        assertNull(result.summary());
         verify(repository).save(argThat(saved -> saved.getContent() == null
                 && saved.getObjectKey().startsWith("documents/")));
         var key = org.mockito.ArgumentCaptor.forClass(String.class);
@@ -92,8 +94,7 @@ class DocumentServiceTests {
     void rolledBackUploadCleansUpRustfsObject() {
         TransactionSynchronizationManager.initSynchronization();
         try {
-            doThrow(new RuntimeException("queue unavailable"))
-                    .when(ocrMessageProducer).sendOcrRequest(any());
+            when(repository.save(any())).thenThrow(new RuntimeException("database unavailable"));
             assertThrows(RuntimeException.class, () -> service.upload("test.pdf", PDF));
             var key = org.mockito.ArgumentCaptor.forClass(String.class);
             verify(documentStorage).upload(key.capture(), eq(PDF));
@@ -101,6 +102,21 @@ class DocumentServiceTests {
                     .forEach(callback -> callback.afterCompletion(
                             TransactionSynchronization.STATUS_ROLLED_BACK));
             verify(documentStorage).delete(key.getValue());
+            verifyNoInteractions(ocrMessageProducer);
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @Test
+    void queuesOcrOnlyAfterCommit() {
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            service.upload("test.pdf", PDF);
+            verifyNoInteractions(ocrMessageProducer);
+            TransactionSynchronizationManager.getSynchronizations()
+                    .forEach(TransactionSynchronization::afterCommit);
+            verify(ocrMessageProducer).sendOcrRequest(argThat(job -> job.documentId() == 1L));
         } finally {
             TransactionSynchronizationManager.clearSynchronization();
         }

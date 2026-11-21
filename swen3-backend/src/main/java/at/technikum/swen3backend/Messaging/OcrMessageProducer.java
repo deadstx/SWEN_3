@@ -16,7 +16,11 @@ public class OcrMessageProducer {
 
     public void sendOcrRequest(OcrMessage message) {
         try {
-            rabbitTemplate.convertAndSend(RabbitConfig.OCR_QUEUE, message);
+            rabbitTemplate.invoke(operations -> {
+                operations.convertAndSend(RabbitConfig.OCR_QUEUE, message);
+                operations.waitForConfirmsOrDie(5_000);
+                return null;
+            });
             log.info("OCR message sent for document id={}", message.documentId());
         } catch (AmqpException e) {
             throw new MessageQueueException(

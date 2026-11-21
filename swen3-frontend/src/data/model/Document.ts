@@ -4,4 +4,6 @@ export interface DocumentResponse {
     fileSize: number;
     uploadedAt: string;
     tags: string[];
+    summary: string | null;
+    summaryStatus: "PENDING" | "COMPLETED" | "NO_TEXT" | "FAILED" | null;
 }

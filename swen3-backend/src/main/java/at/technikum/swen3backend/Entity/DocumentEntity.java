@@ -4,12 +4,14 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@DynamicUpdate
 @Table(name = "documents")
 @Getter
 @NoArgsConstructor
@@ -36,6 +38,12 @@ public class DocumentEntity {
     @Column(length = 512)
     private String objectKey;
 
+    @Column(columnDefinition = "text")
+    private String summary;
+
+    @Column(length = 32)
+    private String summaryStatus;
+
     @ElementCollection
     //Sammlung einfacher Werte (String), die zur DocumentEntity gehört
     @CollectionTable(name = "document_tags", joinColumns = @JoinColumn(name = "document_id"))
@@ -53,6 +61,7 @@ public class DocumentEntity {
     public DocumentEntity(String name, String objectKey, long fileSize, Instant uploadedAt) {
         this.name = name;
         this.objectKey = objectKey;
+        this.summaryStatus = "PENDING";
         this.fileSize = fileSize;
         this.uploadedAt = uploadedAt;
     }

@@ -4,7 +4,7 @@ Ein Dokumentenmanagementsystem zum **Archivieren, Verarbeiten, Durchsuchen und V
 
 Hochgeladene PDFs werden in einem Objektspeicher abgelegt, per **OCR** automatisch in Text umgewandelt und in **Elasticsearch** für die **Volltext- und Fuzzy-Suche** indexiert. Dokumente lassen sich über Metadaten, Tags und Sammlungen verwalten.
 
-Projekt im Rahmen des **SWEN3 BIF5 Semesterprojekts**. Aktueller Stand: **Sprint 4** (Worker Services: OCR, Objektspeicher, Elasticsearch).
+Projekt im Rahmen des **SWEN3 BIF5 Semesterprojekts**. Aktueller Stand: **Sprint 5** (Google Gemini und Android-App). Siehe [Sprint-5-Änderungen und Abnahmetest](SPRINT-5.md).
 
 ## Architektur
 
@@ -28,11 +28,12 @@ Frontend-Suche ──► Backend /api/documents/search ┘
 | Service | Technologie | Port | Aufgabe |
 |---|---|---|---|
 | `frontend` | Next.js | 3000 | Web-UI (Dashboard, Dokumente, Sammlungen, Upload, Suche) |
-| `backend` | Spring Boot (Java 25) | 8081 | REST-API, Validierung, Speicherung, Suche |
+| `backend` | Spring Boot (Java 25) | 8080 / 8081 | REST-API, Validierung, Speicherung, Suche |
 | `postgres` | PostgreSQL 17 | 5432 | Metadaten (Name, Größe, Tags, `objectKey`, Sammlungen) |
 | `rustfs` | RustFS (S3-kompatibel) | 9000 / 9001 | Ablage der PDFs (Bucket `documents`), Konsole auf 9001 |
 | `rabbitmq` | RabbitMQ 4 | 5672 / 15672 | Queues zwischen Backend und Workern |
 | `ocr-worker` | Python, Tesseract, Poppler | – | PDF laden, Text erkennen |
+| `genai-worker` | Python, Gemini API | - | OCR-Text zusammenfassen und Ergebnis ans Backend melden |
 | `indexing-worker` | Python | – | Text in Elasticsearch schreiben |
 | `elasticsearch` | Elasticsearch 8.15 | 9200 | Volltext- und Fuzzy-Suche |
 
@@ -40,10 +41,11 @@ Frontend-Suche ──► Backend /api/documents/search ┘
 
 1. Das Frontend sendet das PDF an `POST /api/documents`.
 2. Das Backend prüft die Datei (nur PDF, nicht leer) und legt sie in RustFS unter `documents/<uuid>.pdf` ab. Die Metadaten und der `objectKey` kommen in PostgreSQL. Schlägt das Speichern der Metadaten fehl, wird das PDF in RustFS wieder entfernt.
-3. Das Backend sendet eine Nachricht an `ocr.queue`.
-4. Der OCR-Worker lädt das PDF aus RustFS, wandelt die Seiten in Bilder um, erkennt den Text mit Tesseract (Deutsch + Englisch) und sendet ihn an `index.queue`.
+3. Nach dem PostgreSQL-Commit sendet das Backend eine Nachricht an `ocr.queue`.
+4. Der OCR-Worker lädt das PDF aus RustFS, wandelt die Seiten in Bilder um, erkennt den Text mit Tesseract (Deutsch + Englisch) und sendet ihn an `index.queue` und `genai.queue`.
 5. Der Indexing-Worker schreibt den Text in den Elasticsearch-Index `documents` (Dokument-ID = ID aus PostgreSQL).
-6. Die Suche im Frontend ruft `GET /api/documents/search?q=...` auf. Das Backend fragt Elasticsearch ab (Felder `text` und `fileName`, `fuzziness: AUTO`) und lädt die Treffer aus PostgreSQL.
+6. Der GenAI-Worker ruft Gemini auf und schickt das Ergebnis über `genai.result.queue` zurück. Das Backend speichert Zusammenfassung und Status in PostgreSQL.
+7. Die Suche im Frontend ruft `GET /api/documents/search?q=...` auf. Das Backend fragt Elasticsearch ab (Felder `text` und `fileName`, `fuzziness: AUTO`) und lädt die Treffer aus PostgreSQL.
 
 ## Queues und Nachrichtenformate
 
@@ -76,7 +78,7 @@ Dokumente (`/api/documents`):
 
 | Methode | Pfad | Beschreibung |
 |---|---|---|
-| POST | `/api/documents` | PDF hochladen (`multipart/form-data`, Feld `file`) |
+| POST | `/api/documents` oder `/` auf Port 8080 | PDF hochladen (`multipart/form-data`, Feld `file`) |
 | GET | `/api/documents` | Alle Dokumente |
 | GET | `/api/documents/{id}` | Ein Dokument |
 | GET | `/api/documents/{id}/download` | PDF aus RustFS (inline, für Vorschau und Download) |

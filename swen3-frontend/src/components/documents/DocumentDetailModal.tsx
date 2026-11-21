@@ -3,7 +3,7 @@
 import BasicModal from "@/components/common/BasicModal";
 import type { DocumentResponse } from "@/data/model/Document";
 import "@/styling/documents/DocumentDetailModal.css";
-import {fetchDocumentBlobById} from "@/data/repository/DocumentRepository";
+import {fetchDocumentBlobById, fetchDocumentById} from "@/data/repository/DocumentRepository";
 import {useEffect, useState} from "react";
 
 type DocumentDetailModalProps = {
@@ -20,6 +20,36 @@ export default function DocumentDetailModal({ document, deleting, onClose, onDel
     const documentId = document?.id;
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
     const [previewFailed, setPreviewFailed] = useState(false);
+    const [latest, setLatest] = useState<DocumentResponse | null>(null);
+    const [summaryUnavailable, setSummaryUnavailable] = useState(false);
+    const summaryDocument = latest && latest.id === documentId ? latest : document;
+
+    useEffect(() => {
+        if (documentId === undefined) return;
+
+        let cancelled = false;
+        let timer: ReturnType<typeof setTimeout>;
+        async function refreshSummary(id: number) {
+            try {
+                const updated = await fetchDocumentById(id);
+                if (cancelled) return;
+                setLatest(updated);
+                setSummaryUnavailable(false);
+                if (updated.summaryStatus === "PENDING") {
+                    timer = setTimeout(() => void refreshSummary(id), 3000);
+                }
+            } catch {
+                if (!cancelled) setSummaryUnavailable(true);
+            }
+        }
+        void refreshSummary(documentId);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+            setLatest(null);
+            setSummaryUnavailable(false);
+        };
+    }, [documentId]);
 
     useEffect(() => {
         if (documentId === undefined) return;
@@ -99,6 +129,18 @@ export default function DocumentDetailModal({ document, deleting, onClose, onDel
                         ) : (
                             <span className="document-detail__empty">Keine</span>
                         )}
+                    </dd>
+                    <dt className="document-detail__label">KI-Zusammenfassung</dt>
+                    <dd className="document-detail__value" style={{whiteSpace: "pre-wrap", overflowWrap: "anywhere"}}>
+                        {summaryDocument?.summary ?? (summaryUnavailable
+                            ? "Die Zusammenfassung konnte nicht abgerufen werden."
+                            : summaryDocument?.summaryStatus === "PENDING"
+                                ? "Zusammenfassung wird erstellt …"
+                                : summaryDocument?.summaryStatus === "NO_TEXT"
+                                    ? "Im PDF wurde kein Text erkannt."
+                                    : summaryDocument?.summaryStatus === "FAILED"
+                                        ? "Zusammenfassung konnte nicht erstellt werden."
+                                        : "Keine Zusammenfassung vorhanden.")}
                     </dd>
                 </dl>
                     {previewFailed ? (
